@@ -1,11 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>Compito</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compito - Fullstack App</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Messaggi dal Server:</h1>
-    <div id="display"></div>
+    <header>
+        <h1>Gestione Messaggi API</h1>
+        <p>Status Backend: <span id="status">Verifica in corso...</span></p>
+    </header>
+
+    <main>
+        <section id="invio">
+            <h3>Invia un nuovo messaggio</h3>
+            <input type="text" id="nuovoMessaggio" placeholder="Scrivi qui...">
+            <button id="btnInvia">Invia al Server</button>
+        </section>
+        <hr>
+        <section id="visualizzazione">
+            <h3>Messaggi recuperati dal Server:</h3>
+            <div id="lista">
+                <p>Caricamento dati dal server...</p>
+            </div>
+        </section>
+    </main>
+
     <script src="script.js"></script>
 </body>
 </html>

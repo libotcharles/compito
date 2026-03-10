@@ -1,9 +1,7 @@
-// 1. Definisci l'URL corretto (assicurati che finisca con /api/messages)
 const URL_API = "https://compito-f5ex.onrender.com/api/messages";
 
-// 2. Funzione per caricare
 function caricaMessaggi() {
-    console.log("Chiamata a:", URL_API); // Debug per vedere se la funzione parte
+    console.log("Chiamata a:", URL_API);
     fetch(URL_API)
         .then(response => {
             if (!response.ok) throw new Error("Errore nel server");
@@ -11,18 +9,28 @@ function caricaMessaggi() {
         })
         .then(data => {
             console.log("Dati ricevuti:", data);
+            
+            // Aggiorna lo status in alto
+            const statusSpan = document.getElementById('status');
+            if(statusSpan) statusSpan.innerText = "Connesso ✅";
+
             const contenitore = document.getElementById('lista');
             if (contenitore) {
-                contenitore.innerHTML = data.map(m => `<p>${m.text}</p>`).join('');
+                // Se l'array è vuoto mostra un messaggio, altrimenti mostra i dati
+                if (data.length === 0) {
+                    contenitore.innerHTML = "<p>Nessun messaggio presente.</p>";
+                } else {
+                    contenitore.innerHTML = data.map(m => `<p class="msg">${m.text}</p>`).join('');
+                }
             }
         })
-        .catch(err => console.error("Errore Fetch:", err));
+        .catch(err => {
+            console.error("Errore Fetch:", err);
+            const statusSpan = document.getElementById('status');
+            if(statusSpan) statusSpan.innerText = "Errore di connessione ❌";
+        });
 }
 
-// 3. ESEGUI LA FUNZIONE (Altrimenti la pagina resta vuota!)
-caricaMessaggi();
-
-// 4. Funzione per inviare
 function inviaMessaggio(testoInserito) {
     fetch(URL_API, {
         method: "POST",
@@ -37,7 +45,7 @@ function inviaMessaggio(testoInserito) {
     .catch(err => console.error("Errore Invio:", err));
 }
 
-// 5. Collega il pulsante dell'HTML alla funzione JS
+// Gestione click pulsante
 const btn = document.getElementById('btnInvia');
 if (btn) {
     btn.addEventListener('click', () => {
@@ -45,7 +53,10 @@ if (btn) {
         const testo = input.value;
         if (testo.trim() !== "") {
             inviaMessaggio(testo);
-            input.value = ""; // Pulisce il campo dopo l'invio
+            input.value = ""; 
         }
     });
 }
+
+// Avvio automatico
+caricaMessaggi();
