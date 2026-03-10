@@ -25,8 +25,13 @@ section {
     margin-bottom: 20px;
 }
 
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
 input {
-    width: 70%;
+    flex-grow: 1; /* Fa sì che l'input occupi tutto lo spazio rimasto */
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -47,10 +52,32 @@ button:hover {
     background-color: #218838;
 }
 
+/* --- STILE MESSAGGI E PULSANTE X --- */
+
 .msg {
     background: #f8f9fa;
-    padding: 10px;
+    padding: 10px 15px;
     border-left: 4px solid #007bff;
     margin: 10px 0;
     border-radius: 4px;
+    display: flex; /* Mette testo e X sulla stessa riga */
+    justify-content: space-between; /* Spinge la X tutto a destra */
+    align-items: center; /* Allinea verticalmente al centro */
+}
+
+.btn-delete {
+    background-color: #dc3545; /* Rosso */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-left: 10px;
+}
+
+.btn-delete:hover {
+    background-color: #a71d2a; /* Rosso scuro al passaggio del mouse */
 }

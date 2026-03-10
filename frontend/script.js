@@ -1,5 +1,6 @@
 const URL_API = "https://compito-f5ex.onrender.com/api/messages";
 
+// 1. Funzione per caricare i messaggi
 function caricaMessaggi() {
     console.log("Chiamata a:", URL_API);
     fetch(URL_API)
@@ -10,17 +11,21 @@ function caricaMessaggi() {
         .then(data => {
             console.log("Dati ricevuti:", data);
             
-            // Aggiorna lo status in alto
             const statusSpan = document.getElementById('status');
             if(statusSpan) statusSpan.innerText = "Connesso ✅";
 
             const contenitore = document.getElementById('lista');
             if (contenitore) {
-                // Se l'array è vuoto mostra un messaggio, altrimenti mostra i dati
                 if (data.length === 0) {
                     contenitore.innerHTML = "<p>Nessun messaggio presente.</p>";
                 } else {
-                    contenitore.innerHTML = data.map(m => `<p class="msg">${m.text}</p>`).join('');
+                    // Aggiunta dell'indice e del pulsante X per ogni messaggio
+                    contenitore.innerHTML = data.map((m, index) => `
+                        <div class="msg">
+                            <span>${m.text}</span>
+                            <button class="btn-delete" onclick="cancellaMessaggio(${index})">x</button>
+                        </div>
+                    `).join('');
                 }
             }
         })
@@ -31,6 +36,7 @@ function caricaMessaggi() {
         });
 }
 
+// 2. Funzione per inviare un messaggio (POST)
 function inviaMessaggio(testoInserito) {
     fetch(URL_API, {
         method: "POST",
@@ -45,7 +51,26 @@ function inviaMessaggio(testoInserito) {
     .catch(err => console.error("Errore Invio:", err));
 }
 
-// Gestione click pulsante
+// 3. Funzione per cancellare un messaggio (DELETE)
+function cancellaMessaggio(index) {
+    // Chiede conferma all'utente prima di cancellare
+    if (!confirm("Vuoi eliminare questo messaggio?")) return;
+
+    fetch(`${URL_API}/${index}`, {
+        method: "DELETE"
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Impossibile cancellare");
+        return response.json();
+    })
+    .then(risultato => {
+        console.log("Eliminato:", risultato);
+        caricaMessaggi(); // Ricarica la lista aggiornata
+    })
+    .catch(err => console.error("Errore DELETE:", err));
+}
+
+// 4. Gestione click pulsante Invia
 const btn = document.getElementById('btnInvia');
 if (btn) {
     btn.addEventListener('click', () => {
@@ -58,5 +83,5 @@ if (btn) {
     });
 }
 
-// Avvio automatico
+// Avvio automatico al caricamento della pagina
 caricaMessaggi();

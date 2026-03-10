@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <header>
         <h1>Gestione Messaggi API</h1>
         <p>Status Backend: <span id="status">Verifica in corso...</span></p>
@@ -15,10 +16,14 @@
     <main>
         <section id="invio">
             <h3>Invia un nuovo messaggio</h3>
-            <input type="text" id="nuovoMessaggio" placeholder="Scrivi qui...">
-            <button id="btnInvia">Invia al Server</button>
+            <div class="input-group">
+                <input type="text" id="nuovoMessaggio" placeholder="Scrivi qui il tuo messaggio...">
+                <button id="btnInvia">Invia al Server</button>
+            </div>
         </section>
+
         <hr>
+
         <section id="visualizzazione">
             <h3>Messaggi recuperati dal Server:</h3>
             <div id="lista">

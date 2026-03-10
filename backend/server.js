@@ -25,3 +25,15 @@ const PORT = process.env.PORT || 3000; // Prende la porta di Render o usa 3000 i
 app.listen(PORT, () => {
     console.log(`Server in esecuzione sulla porta ${PORT}`);
 });
+
+
+// Endpoint DELETE: Serve per cancellare un messaggio tramite il suo indice
+app.delete('/api/messages/:id', (req, res) => {
+    const id = parseInt(req.params.id); // Prende l'indice dall'URL
+    if (id >= 0 && id < messaggi.length) {
+        const rimosso = messaggi.splice(id, 1); // Rimuove l'elemento dall'array
+        res.json({ status: "successo", rimosso: rimosso });
+    } else {
+        res.status(404).json({ error: "Messaggio non trovato" });
+    }
+});
