@@ -32,33 +32,24 @@ app.get('/', (req, res) => {
 
 // GET: catalogo + profilo utente
 app.get('/api/data', async (req, res) => {
-  try {
-    const { data: prodotti, error: prodottiError } = await supabase
-      .from('prodotti')
-      .select('*')
-      .order('id', { ascending: true });
+    try {
+        console.log("Tentativo di recupero dati...");
+        
+        const { data: prodotti, error: errorProd } = await supabase.from('prodotti').select('*');
+        if (errorProd) throw errorProd;
 
-    if (prodottiError) {
-      console.error('Errore prodotti:', prodottiError);
-      return res.status(500).json({ error: 'Errore caricamento prodotti' });
+        const { data: profilo, error: errorProf } = await supabase.from('profilo').select('*').eq('id', 1).single();
+        if (errorProf) throw errorProf;
+
+        res.json({ prodotti, profilo });
+    } catch (error) {
+        console.error("ERRORE SUPABASE:", error);
+        res.status(500).json({ 
+            messaggio: "Errore durante il caricamento",
+            dettaglio_errore: error.message,
+            codice: error.code // Questo ci dirà se è un problema di tabelle o di chiavi
+        });
     }
-
-    const { data: profilo, error: profiloError } = await supabase
-      .from('profilo')
-      .select('*')
-      .eq('id', USER_ID)
-      .single();
-
-    if (profiloError) {
-      console.error('Errore profilo:', profiloError);
-      return res.status(500).json({ error: 'Errore caricamento profilo' });
-    }
-
-    return res.json({ prodotti, profilo });
-  } catch (error) {
-    console.error('Errore /api/data:', error);
-    return res.status(500).json({ error: 'Errore interno del server' });
-  }
 });
 
 // POST: acquisto prodotto
