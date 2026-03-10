@@ -16,5 +16,7 @@ app.post('/api/messages', (req, res) => {
     res.json({ message: "Dato ricevuto!" });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Server pronto su http://localhost:${PORT}`));
+const PORT = process.env.PORT || 3000; // Prende la porta di Render o usa 3000 in locale
+app.listen(PORT, () => {
+    console.log(`Server in esecuzione sulla porta ${PORT}`);
+});
