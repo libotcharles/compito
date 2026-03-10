@@ -22,4 +22,7 @@ L'IA è stata utilizzata per il debug della connessione a Supabase, la gestione 
 
 ### 5. Link
 - **Backend (Render):** https://compito-f5ex.onrender.com
-- **Frontend (Vercel/GitHub):** [INCOLLA QUI IL TUO LINK DI VERCEL]
+- **Frontend (Vercel/GitHub):** (https://compito-theta.vercel.app/)
+
+
+postgresql://postgres:icJYoIsCyGmxIhYK@db.hqsqjwgelyoqnkrfhngi.supabase.co:5432/postgres
