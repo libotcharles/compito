@@ -7,7 +7,6 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const USER_ID = 1;
 
 // Usa variabili d'ambiente su Render / locale
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -21,7 +20,7 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use(cors({
-  origin: '*', // per compito scolastico va bene; per deploy finale puoi restringerlo
+  origin: '*', 
 }));
 
 app.use(express.json());
@@ -30,223 +29,123 @@ app.get('/', (req, res) => {
   res.send('Il server è vivo e risponde alla root!');
 });
 
-// GET: catalogo + profilo utente
+// --- ROTTE AGGIORNATE ---
+
+// GET: catalogo + TUTTI i profili (per scelta utente e admin)
 app.get('/api/data', async (req, res) => {
     try {
-        console.log("Tentativo di recupero dati...");
+        console.log("Recupero prodotti e profili...");
         
-        const { data: prodotti, error: errorProd } = await supabase.from('prodotti').select('*');
+        const { data: prodotti, error: errorProd } = await supabase.from('prodotti').select('*').order('id', { ascending: true });
         if (errorProd) throw errorProd;
 
-        const { data: profilo, error: errorProf } = await supabase.from('profilo').select('*').eq('id', 1).single();
+        // Ora carichiamo tutti i profili invece di uno solo
+        const { data: profili, error: errorProf } = await supabase.from('profilo').select('*').order('id', { ascending: true });
         if (errorProf) throw errorProf;
 
-        res.json({ prodotti, profilo });
+        res.json({ prodotti, profili });
     } catch (error) {
         console.error("ERRORE SUPABASE:", error);
-        res.status(500).json({ 
-            messaggio: "Errore durante il caricamento",
-            dettaglio_errore: error.message,
-            codice: error.code // Questo ci dirà se è un problema di tabelle o di chiavi
-        });
+        res.status(500).json({ messaggio: "Errore caricamento", dettaglio: error.message });
     }
 });
 
-// POST: acquisto prodotto
+// POST: acquisto prodotto (accetta userId dal body)
 app.post('/api/buy', async (req, res) => {
   try {
-    const { prodottoId } = req.body;
+    const { prodottoId, userId } = req.body; // Riceviamo l'id dell'utente che compra
 
-    if (!prodottoId || Number.isNaN(Number(prodottoId))) {
-      return res.status(400).json({ error: 'prodottoId mancante o non valido' });
+    if (!prodottoId || !userId) {
+      return res.status(400).json({ error: 'Dati mancanti (prodottoId o userId)' });
     }
 
-    const productIdNum = Number(prodottoId);
+    // 1. Controllo Prodotto
+    const { data: prod, error: prodError } = await supabase.from('prodotti').select('*').eq('id', prodottoId).single();
+    if (prodError || !prod) return res.status(404).json({ error: 'Prodotto non trovato' });
 
-    const { data: prod, error: prodError } = await supabase
-      .from('prodotti')
-      .select('*')
-      .eq('id', productIdNum)
-      .single();
+    // 2. Controllo Utente
+    const { data: user, error: userError } = await supabase.from('profilo').select('*').eq('id', userId).single();
+    if (userError || !user) return res.status(404).json({ error: 'Utente non trovato' });
 
-    if (prodError || !prod) {
-      console.error('Errore prodotto:', prodError);
-      return res.status(404).json({ error: 'Prodotto non trovato' });
-    }
+    // 3. Validazione Business
+    if (prod.stock <= 0) return res.status(409).json({ error: 'Prodotto esaurito' });
+    if (user.crediti < prod.prezzo) return res.status(409).json({ error: 'Crediti insufficienti' });
 
-    const { data: user, error: userError } = await supabase
-      .from('profilo')
-      .select('*')
-      .eq('id', USER_ID)
-      .single();
+    // 4. Aggiornamento DB
+    await supabase.from('prodotti').update({ stock: prod.stock - 1 }).eq('id', prodottoId);
+    await supabase.from('profilo').update({ crediti: user.crediti - prod.prezzo }).eq('id', userId);
 
-    if (userError || !user) {
-      console.error('Errore utente:', userError);
-      return res.status(404).json({ error: 'Utente non trovato' });
-    }
-
-    if (prod.stock <= 0) {
-      return res.status(409).json({ error: 'Prodotto esaurito' });
-    }
-
-    if (user.crediti < prod.prezzo) {
-      return res.status(409).json({ error: 'Crediti insufficienti' });
-    }
-
-    const nuovoStock = prod.stock - 1;
-    const nuoviCrediti = user.crediti - prod.prezzo;
-
-    const { error: stockUpdateError } = await supabase
-      .from('prodotti')
-      .update({ stock: nuovoStock })
-      .eq('id', productIdNum);
-
-    if (stockUpdateError) {
-      console.error('Errore update stock:', stockUpdateError);
-      return res.status(500).json({ error: 'Errore aggiornamento stock' });
-    }
-
-    const { error: creditiUpdateError } = await supabase
-      .from('profilo')
-      .update({ crediti: nuoviCrediti })
-      .eq('id', USER_ID);
-
-    if (creditiUpdateError) {
-      console.error('Errore update crediti:', creditiUpdateError);
-      return res.status(500).json({ error: 'Errore aggiornamento crediti' });
-    }
-
-    return res.json({
-      success: true,
-      message: 'Acquisto completato',
-      profilo: {
-        ...user,
-        crediti: nuoviCrediti,
-      },
-      prodotto: {
-        ...prod,
-        stock: nuovoStock,
-      },
-    });
+    return res.json({ success: true, message: 'Acquisto completato' });
   } catch (error) {
     console.error('Errore /api/buy:', error);
     return res.status(500).json({ error: 'Errore transazione' });
   }
 });
 
+// --- ROTTE ADMIN ---
+
+// POST: crea nuovo utente (Novità)
+app.post('/api/admin/users', async (req, res) => {
+    try {
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ error: 'Username mancante' });
+
+        const { data, error } = await supabase
+            .from('profilo')
+            .insert([{ username, crediti: 1000 }]) // Bonus iniziale
+            .select().single();
+
+        if (error) throw error;
+        res.status(201).json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Errore creazione utente' });
+    }
+});
+
 // POST: admin aggiunge nuovo prodotto
 app.post('/api/admin/products', async (req, res) => {
   try {
     const { nome, prezzo, stock } = req.body;
+    if (!nome || prezzo < 0 || stock < 0) return res.status(400).json({ error: 'Dati non validi' });
 
-    if (!nome || Number.isNaN(Number(prezzo)) || Number.isNaN(Number(stock))) {
-      return res.status(400).json({ error: 'Dati prodotto non validi' });
-    }
+    const { data, error } = await supabase.from('prodotti').insert([{ nome, prezzo, stock }]).select().single();
+    if (error) throw error;
 
-    const prezzoNum = Number(prezzo);
-    const stockNum = Number(stock);
-
-    if (prezzoNum < 0 || stockNum < 0) {
-      return res.status(400).json({ error: 'Prezzo e stock devono essere >= 0' });
-    }
-
-    const { data, error } = await supabase
-      .from('prodotti')
-      .insert([{ nome, prezzo: prezzoNum, stock: stockNum }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Errore insert prodotto:', error);
-      return res.status(500).json({ error: 'Errore creazione prodotto' });
-    }
-
-    return res.status(201).json({
-      success: true,
-      message: 'Prodotto aggiunto',
-      prodotto: data,
-    });
+    res.status(201).json(data);
   } catch (error) {
-    console.error('Errore /api/admin/products:', error);
-    return res.status(500).json({ error: 'Errore interno del server' });
+    res.status(500).json({ error: 'Errore creazione prodotto' });
   }
 });
 
-// PATCH: admin modifica stock prodotto
+// PATCH: modifica stock
 app.patch('/api/admin/products/:id/stock', async (req, res) => {
   try {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { stock } = req.body;
+    if (stock < 0) return res.status(400).json({ error: 'Stock negativo non ammesso' });
 
-    if (Number.isNaN(id) || Number.isNaN(Number(stock))) {
-      return res.status(400).json({ error: 'ID o stock non validi' });
-    }
+    const { data, error } = await supabase.from('prodotti').update({ stock }).eq('id', id).select().single();
+    if (error) throw error;
 
-    const stockNum = Number(stock);
-
-    if (stockNum < 0) {
-      return res.status(400).json({ error: 'Lo stock non può essere negativo' });
-    }
-
-    const { data, error } = await supabase
-      .from('prodotti')
-      .update({ stock: stockNum })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error || !data) {
-      console.error('Errore update stock:', error);
-      return res.status(404).json({ error: 'Prodotto non trovato o update fallito' });
-    }
-
-    return res.json({
-      success: true,
-      message: 'Stock aggiornato',
-      prodotto: data,
-    });
+    res.json({ success: true, prodotto: data });
   } catch (error) {
-    console.error('Errore PATCH stock:', error);
-    return res.status(500).json({ error: 'Errore interno del server' });
+    res.status(500).json({ error: 'Errore update stock' });
   }
 });
 
-// PATCH: admin assegna crediti bonus all'utente
+// PATCH: modifica crediti utente specifico
 app.patch('/api/admin/users/:id/credits', async (req, res) => {
   try {
-    const id = Number(req.params.id);
+    const id = req.params.id;
     const { credits } = req.body;
+    if (credits < 0) return res.status(400).json({ error: 'Crediti negativi non ammessi' });
 
-    if (Number.isNaN(id) || Number.isNaN(Number(credits))) {
-      return res.status(400).json({ error: 'ID o credits non validi' });
-    }
+    const { data, error } = await supabase.from('profilo').update({ crediti: credits }).eq('id', id).select().single();
+    if (error) throw error;
 
-    const creditsNum = Number(credits);
-
-    if (creditsNum < 0) {
-      return res.status(400).json({ error: 'I crediti non possono essere negativi' });
-    }
-
-    const { data, error } = await supabase
-      .from('profilo')
-      .update({ crediti: creditsNum })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error || !data) {
-      console.error('Errore update crediti:', error);
-      return res.status(404).json({ error: 'Utente non trovato o update fallito' });
-    }
-
-    return res.json({
-      success: true,
-      message: 'Crediti aggiornati',
-      profilo: data,
-    });
+    res.json({ success: true, profilo: data });
   } catch (error) {
-    console.error('Errore PATCH credits:', error);
-    return res.status(500).json({ error: 'Errore interno del server' });
+    res.status(500).json({ error: 'Errore update crediti' });
   }
 });
 
