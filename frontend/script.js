@@ -36,3 +36,16 @@ function inviaMessaggio(testoInserito) {
     })
     .catch(err => console.error("Errore Invio:", err));
 }
+
+// 5. Collega il pulsante dell'HTML alla funzione JS
+const btn = document.getElementById('btnInvia');
+if (btn) {
+    btn.addEventListener('click', () => {
+        const input = document.getElementById('nuovoMessaggio');
+        const testo = input.value;
+        if (testo.trim() !== "") {
+            inviaMessaggio(testo);
+            input.value = ""; // Pulisce il campo dopo l'invio
+        }
+    });
+}
