@@ -1,121 +1,65 @@
-// 1. Configurazione: Sostituisci con il tuo URL di Render
-const API_URL = "https://compito-f5ex.onrender.com";
+const API_URL = "https://compito-f5ex.onrender.com/api"; // CAMBIA CON IL TUO URL RENDER
+let isAdmin = false;
 
-let isAdmin = false; // Variabile di stato per gestire le due viste
-
-// Funzione principale: recupera i dati dal backend (Render + Supabase)
 async function caricaDati() {
-    try {
-        const res = await fetch(`${API_URL}/data`);
-        if (!res.ok) throw new Error("Errore nel caricamento");
-        
-        const data = await res.json();
-        
-        // Aggiorna i testi fissi nell'HTML
-        document.getElementById('userName').innerText = data.profilo.username;
-        document.getElementById('userCredits').innerText = data.profilo.crediti;
-        document.getElementById('server-status').innerText = "Online ✅";
+    const res = await fetch(`${API_URL}/data`);
+    const data = await res.json();
+    
+    document.getElementById('userName').innerText = data.profilo.username;
+    document.getElementById('userCredits').innerText = data.profilo.crediti;
 
-        // Costruisce la griglia dei prodotti
-        renderCatalogo(data.prodotti);
-    } catch (err) {
-        document.getElementById('server-status').innerText = "Errore ❌";
-        console.error("Errore fetch:", err);
-    }
-}
-
-// Funzione per generare l'HTML dei prodotti
-function renderCatalogo(prodotti) {
     const app = document.getElementById('app');
-    app.innerHTML = ""; // Svuota il contenitore
+    app.innerHTML = "";
 
-    prodotti.forEach(p => {
+    if (isAdmin) {
+        const headerAdmin = document.createElement('div');
+        headerAdmin.className = 'admin-box';
+        headerAdmin.innerHTML = `<h3>Pannello Admin</h3>
+            <input type="number" id="new-cred" placeholder="Nuovi crediti">
+            <button onclick="update('crediti')">Aggiorna Saldo</button>`;
+        app.appendChild(headerAdmin);
+    }
+
+    data.prodotti.forEach(p => {
         const card = document.createElement('div');
         card.className = 'card';
-
-        if (!isAdmin) {
-            // VISTA UTENTE: Prezzo e Bottone Acquista
-            card.innerHTML = `
-                <h3>${p.nome}</h3>
-                <p>Prezzo: <strong>${p.prezzo}</strong> crediti</p>
-                <p>Stock: ${p.stock} pezzi</p>
-                <button onclick="acquista(${p.id})" ${p.stock <= 0 ? 'disabled' : ''}>
-                    ${p.stock > 0 ? 'Acquista' : 'Esaurito'}
-                </button>
-            `;
-        } else {
-            // VISTA ADMIN: Modifica Stock e Crediti
-            card.innerHTML = `
-                <h3>${p.nome}</h3>
-                <label>Modifica Stock:</label>
-                <input type="number" id="st-${p.id}" value="${p.stock}" min="0">
-                <button class="btn-admin-action" onclick="aggiornaDati('stock', ${p.id})">Salva Stock</button>
-            `;
-        }
+        card.innerHTML = `
+            <h3>${p.nome}</h3>
+            <p>Prezzo: ${p.prezzo} | Stock: ${p.stock}</p>
+            ${!isAdmin ? 
+                `<button onclick="compra(${p.id})" ${p.stock <= 0 ? 'disabled' : ''}>Acquista</button>` :
+                `<input type="number" id="st-${p.id}" value="${p.stock}">
+                 <button onclick="update('stock', ${p.id})" class="btn-admin">Salva Stock</button>`
+            }
+        `;
         app.appendChild(card);
     });
-
-    // Se admin, aggiungi pulsante speciale per i crediti utente
-    if (isAdmin) {
-        const adminBox = document.createElement('div');
-        adminBox.className = 'admin-controls';
-        adminBox.innerHTML = `
-            <h3>Dashboard Admin - Crediti</h3>
-            <input type="number" id="nuovi-crediti" placeholder="Set Crediti Utente">
-            <button onclick="aggiornaDati('crediti')">Aggiorna Saldo Utente</button>
-        `;
-        app.prepend(adminBox);
-    }
 }
 
-// FUNZIONE ACQUISTO (POST)
-async function acquista(id) {
-    if (!confirm("Vuoi procedere con l'acquisto?")) return;
-
+async function compra(id) {
     const res = await fetch(`${API_URL}/buy`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ prodottoId: id })
     });
-
-    const result = await res.json();
-    if (res.ok) {
-        alert("Acquisto completato!");
-    } else {
-        alert("Errore: " + result.error);
-    }
-    caricaDati(); // Ricarica per aggiornare crediti e stock
+    const data = await res.json();
+    if (res.ok) alert("OK!"); else alert("Errore: " + data.error);
+    caricaDati();
 }
 
-// FUNZIONE ADMIN UPDATE (POST)
-async function aggiornaDati(tipo, id = null) {
-    let valore;
-    if (tipo === 'stock') {
-        valore = document.getElementById(`st-${id}`).value;
-    } else {
-        valore = document.getElementById('nuovi-crediti').value;
-    }
-
+async function update(tipo, id = null) {
+    const valore = tipo === 'stock' ? document.getElementById(`st-${id}`).value : document.getElementById('new-cred').value;
     await fetch(`${API_URL}/admin/update`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo, valore: parseInt(valore), id })
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ tipo, valore, id })
     });
-    
-    alert("Dati aggiornati correttamente");
     caricaDati();
 }
 
-// FUNZIONE SWITCH VISTA (Chiamata dall'HTML)
-window.switchView = function(view) {
-    isAdmin = (view === 'admin');
-    
-    // Feedback visivo sui pulsanti nav
-    document.getElementById('viewUser').classList.toggle('active', !isAdmin);
-    document.getElementById('viewAdmin').classList.toggle('active', isAdmin);
-    
+function switchView(v) {
+    isAdmin = (v === 'admin');
     caricaDati();
-};
+}
 
-// Primo avvio
 caricaDati();

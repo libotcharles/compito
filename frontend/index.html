@@ -2,40 +2,29 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Commerce Distribuito - Verifica TPSI</title>
+    <title>E-Commerce TPSI</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <nav class="navbar">
-        <div class="nav-container">
-            <span class="logo">🛒 MyShop API</span>
-            <div class="nav-buttons">
-                <button class="btn-nav" id="viewUser" onclick="switchView('user')">Vista Utente</button>
-                <button class="btn-nav" id="viewAdmin" onclick="switchView('admin')">Vista Admin</button>
+        <div class="container nav-flex">
+            <span class="logo">🛒 MyShop</span>
+            <div>
+                <button onclick="switchView('user')" class="btn-nav" id="btn-user">Vista Utente</button>
+                <button onclick="switchView('admin')" class="btn-nav" id="btn-admin">Vista Admin</button>
             </div>
         </div>
     </nav>
 
     <header class="user-bar">
-        <div class="container">
-            <div class="user-info">
-                <p>👤 Utente: <span id="userName">Caricamento...</span></p>
-                <p>💰 Saldo: <span id="userCredits" class="credits">0</span> crediti</p>
-            </div>
-            <div id="status-indicator">
-                <small>Status: <span id="server-status">Verifica...</span></small>
-            </div>
+        <div class="container bar-flex">
+            <p>👤 <span id="userName">...</span></p>
+            <p>💰 Saldo: <span id="userCredits" class="credits">0</span> crediti</p>
         </div>
     </header>
 
     <main class="container">
-        <section id="app" class="grid-container">
-            <div class="loading-state">
-                <p>Recupero dati dal server Render in corso...</p>
-            </div>
-        </section>
+        <div id="app" class="grid-container"></div>
     </main>
 
     <script src="script.js"></script>
