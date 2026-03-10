@@ -85,25 +85,21 @@ app.post('/api/buy', async (req, res) => {
 // --- ROTTE ADMIN ---
 
 // POST: crea nuovo utente (Novità)
-// POST: Crea un nuovo profilo (Utente)
 app.post('/api/admin/users', async (req, res) => {
-  try {
-    const { username } = req.body;
-    if (!username) return res.status(400).json({ error: 'Nome mancante' });
+    try {
+        const { username } = req.body;
+        if (!username) return res.status(400).json({ error: 'Username mancante' });
 
-    // Inseriamo su Supabase. L'ID viene creato da solo se hai messo IDENTITY
-    const { data, error } = await supabase
-      .from('profilo')
-      .insert([{ username, crediti: 1000 }]) 
-      .select()
-      .single();
+        const { data, error } = await supabase
+            .from('profilo')
+            .insert([{ username, crediti: 1000 }]) // Bonus iniziale
+            .select().single();
 
-    if (error) throw error;
-    res.status(201).json(data);
-  } catch (error) {
-    console.error("Errore creazione utente:", error);
-    res.status(500).json({ error: error.message });
-  }
+        if (error) throw error;
+        res.status(201).json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Errore creazione utente' });
+    }
 });
 
 // POST: admin aggiunge nuovo prodotto
