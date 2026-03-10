@@ -74,7 +74,6 @@ async function caricaDati() {
         const res = await fetch(`${API_URL}/data`);
         const data = await res.json();
         
-        // Aggiorna Header (Assicurati che questi ID esistano nel tuo HTML)
         if (data.profilo) {
             document.getElementById('userName').innerText = data.profilo.username;
             document.getElementById('userCredits').innerText = data.profilo.crediti;
@@ -83,17 +82,20 @@ async function caricaDati() {
         const app = document.getElementById('app');
         app.innerHTML = "";
 
-        // Se siamo in modalità Admin, mostriamo il box per i crediti
+        // Sezione Admin per i Crediti
         if (isAdmin) {
             const headerAdmin = document.createElement('div');
             headerAdmin.className = 'admin-box';
-            headerAdmin.style.border = "2px solid red";
-            headerAdmin.style.padding = "10px";
+            headerAdmin.style.border = "2px solid #ff4444";
+            headerAdmin.style.padding = "15px";
             headerAdmin.style.marginBottom = "20px";
+            headerAdmin.style.borderRadius = "8px";
             headerAdmin.innerHTML = `
-                <h3>Pannello Admin - Gestione Crediti</h3>
-                <input type="number" id="new-cred" placeholder="Inserisci saldo totale">
-                <button onclick="update('crediti')">Imposta Saldo Utente</button>
+                <h3>🛠 Pannello Admin - Gestione Utente</h3>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="new-cred" placeholder="Nuovo Saldo Totale">
+                    <button onclick="update('crediti')" class="btn-admin">Aggiorna Saldo</button>
+                </div>
             `;
             app.appendChild(headerAdmin);
         }
@@ -104,21 +106,23 @@ async function caricaDati() {
             card.className = 'card';
             card.innerHTML = `
                 <h3>${p.nome}</h3>
-                <p>Prezzo: ${p.prezzo} | Stock: ${p.stock}</p>
+                <p>Prezzo: <strong>${p.prezzo}</strong> crediti</p>
+                <p>Disponibilità: ${p.stock}</p>
                 ${!isAdmin ? 
-                    `<button onclick="compra(${p.id})" ${p.stock <= 0 ? 'disabled' : ''}>
-                        ${p.stock <= 0 ? 'Esaurito' : 'Acquista'}
+                    `<button onclick="compra(${p.id})" ${p.stock <= 0 ? 'disabled' : ''} class="btn-buy">
+                        ${p.stock <= 0 ? 'Esaurito' : 'Acquista Ora'}
                     </button>` :
-                    `<div>
-                        <input type="number" id="st-${p.id}" value="${p.stock}" style="width: 50px">
-                        <button onclick="update('stock', ${p.id})" class="btn-admin">Salva Stock</button>
+                    `<div class="admin-controls">
+                        <label>Stock:</label>
+                        <input type="number" id="st-${p.id}" value="${p.stock}" style="width: 60px">
+                        <button onclick="update('stock', ${p.id})" class="btn-save">Salva</button>
                     </div>`
                 }
             `;
             app.appendChild(card);
         });
     } catch (error) {
-        console.error("Errore caricamento dati:", error);
+        console.error("Errore nel caricamento dei dati:", error);
     }
 }
 
@@ -133,59 +137,100 @@ async function compra(id) {
         const data = await res.json();
         
         if (res.ok) {
-            alert("Acquisto completato!");
+            alert("✅ Acquisto effettuato con successo!");
         } else {
-            alert("Errore: " + data.error);
+            alert("❌ Errore: " + data.error);
         }
-        caricaDati(); // Ricarica per aggiornare crediti e stock
+        caricaDati();
     } catch (error) {
-        alert("Errore di connessione");
+        alert("⚠️ Errore di connessione al server");
     }
 }
 
-// 3. FUNZIONE AGGIORNAMENTO (Admin)
+// 3. FUNZIONE AGGIORNAMENTO STOCK E CREDITI (Admin)
 async function update(tipo, id = null) {
     let url = "";
     let bodyData = {};
 
     if (tipo === 'crediti') {
         const valore = document.getElementById('new-cred').value;
-        if (!valore) return alert("Inserisci un valore");
-        
-        // Il tuo backend: PATCH /api/admin/users/:id/credits
+        if (!valore) return alert("Inserisci un importo");
         url = `${API_URL}/admin/users/1/credits`; 
         bodyData = { credits: Number(valore) };
     } 
     else if (tipo === 'stock') {
         const valore = document.getElementById(`st-${id}`).value;
-        
-        // Il tuo backend: PATCH /api/admin/products/:id/stock
         url = `${API_URL}/admin/products/${id}/stock`;
         bodyData = { stock: Number(valore) };
     }
 
     try {
         const res = await fetch(url, {
-            method: 'PATCH', // Importante: il tuo server usa PATCH
+            method: 'PATCH',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(bodyData)
         });
 
         if (res.ok) {
-            alert("Aggiornato con successo!");
+            alert("💾 Dati aggiornati nel database!");
             caricaDati();
         } else {
             const err = await res.json();
-            alert("Errore: " + (err.error || "Fallito"));
+            alert("❌ Errore: " + (err.error || "Operazione fallita"));
         }
     } catch (error) {
-        alert("Errore di rete");
+        alert("⚠️ Errore di rete");
     }
 }
 
-// 4. SWITCH VISTA
+// 4. NUOVA FUNZIONE: AGGIUNGI PRODOTTO (Admin)
+async function aggiungiProdotto() {
+    const nome = document.getElementById('add-nome').value;
+    const prezzo = document.getElementById('add-prezzo').value;
+    const stock = document.getElementById('add-stock').value;
+
+    if(!nome || !prezzo || !stock) return alert("⚠️ Compila tutti i campi del nuovo prodotto!");
+
+    try {
+        const res = await fetch(`${API_URL}/admin/products`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                nome, 
+                prezzo: Number(prezzo), 
+                stock: Number(stock) 
+            })
+        });
+        
+        if(res.ok) {
+            alert("✨ Nuovo prodotto inserito a catalogo!");
+            // Reset campi
+            document.getElementById('add-nome').value = "";
+            document.getElementById('add-prezzo').value = "";
+            document.getElementById('add-stock').value = "";
+            caricaDati();
+        } else {
+            alert("❌ Errore nella creazione del prodotto");
+        }
+    } catch (e) {
+        alert("⚠️ Errore durante l'invio");
+    }
+}
+
+// 5. SWITCH VISTA
 function switchView(v) {
     isAdmin = (v === 'admin');
+    
+    // Gestione visibilità modulo aggiunta prodotto (presente nel tuo HTML)
+    const adminPanel = document.getElementById('admin-add-product');
+    if (adminPanel) {
+        adminPanel.style.display = isAdmin ? 'block' : 'none';
+    }
+
+    // Cambia stile bottoni navbar per feedback visivo
+    document.getElementById('btn-user').style.opacity = isAdmin ? "0.5" : "1";
+    document.getElementById('btn-admin').style.opacity = isAdmin ? "1" : "0.5";
+
     caricaDati();
 }
 

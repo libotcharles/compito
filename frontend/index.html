@@ -18,12 +18,20 @@
 
     <header class="user-bar">
         <div class="container bar-flex">
-            <p>👤 <span id="userName">...</span></p>
+            <p>👤 <span id="userName">Caricamento...</span></p>
             <p>💰 Saldo: <span id="userCredits" class="credits">0</span> crediti</p>
         </div>
     </header>
 
     <main class="container">
+        <div id="admin-add-product" style="display: none; background: #f4f4f4; padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ddd;">
+            <h3>➕ Aggiungi Nuovo Prodotto</h3>
+            <input type="text" id="add-nome" placeholder="Nome Prodotto">
+            <input type="number" id="add-prezzo" placeholder="Prezzo">
+            <input type="number" id="add-stock" placeholder="Stock iniziale">
+            <button onclick="aggiungiProdotto()" class="btn-admin">Crea Prodotto</button>
+        </div>
+
         <div id="app" class="grid-container"></div>
     </main>
 
