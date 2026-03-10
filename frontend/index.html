@@ -3,32 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Compito - Fullstack App</title>
+    <title>E-Commerce Distribuito - Verifica TPSI</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <h1>Gestione Messaggi API</h1>
-        <p>Status Backend: <span id="status">Verifica in corso...</span></p>
+    <nav class="navbar">
+        <div class="nav-container">
+            <span class="logo">🛒 MyShop</span>
+            <div class="nav-buttons">
+                <button class="btn-nav" id="viewUser" onclick="switchView('user')">Vista Utente</button>
+                <button class="btn-nav" id="viewAdmin" onclick="switchView('admin')">Vista Admin</button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="user-bar">
+        <div class="container">
+            <p>Utente: <span id="userName">Caricamento...</span></p>
+            <p>Saldo: <span id="userCredits" class="credits">0</span> crediti</p>
+        </div>
     </header>
 
-    <main>
-        <section id="invio">
-            <h3>Invia un nuovo messaggio</h3>
-            <div class="input-group">
-                <input type="text" id="nuovoMessaggio" placeholder="Scrivi qui il tuo messaggio...">
-                <button id="btnInvia">Invia al Server</button>
-            </div>
-        </section>
-
-        <hr>
-
-        <section id="visualizzazione">
-            <h3>Messaggi recuperati dal Server:</h3>
-            <div id="lista">
-                <p>Caricamento dati dal server...</p>
-            </div>
+    <main class="container">
+        <section id="app" class="grid-container">
+            <p class="loading">Inizializzazione catalogo...</p>
         </section>
     </main>
 
