@@ -10,7 +10,7 @@
 
     <nav class="navbar">
         <div class="nav-container">
-            <span class="logo">🛒 MyShop</span>
+            <span class="logo">🛒 MyShop API</span>
             <div class="nav-buttons">
                 <button class="btn-nav" id="viewUser" onclick="switchView('user')">Vista Utente</button>
                 <button class="btn-nav" id="viewAdmin" onclick="switchView('admin')">Vista Admin</button>
@@ -20,14 +20,21 @@
 
     <header class="user-bar">
         <div class="container">
-            <p>Utente: <span id="userName">Caricamento...</span></p>
-            <p>Saldo: <span id="userCredits" class="credits">0</span> crediti</p>
+            <div class="user-info">
+                <p>👤 Utente: <span id="userName">Caricamento...</span></p>
+                <p>💰 Saldo: <span id="userCredits" class="credits">0</span> crediti</p>
+            </div>
+            <div id="status-indicator">
+                <small>Status: <span id="server-status">Verifica...</span></small>
+            </div>
         </div>
     </header>
 
     <main class="container">
         <section id="app" class="grid-container">
-            <p class="loading">Inizializzazione catalogo...</p>
+            <div class="loading-state">
+                <p>Recupero dati dal server Render in corso...</p>
+            </div>
         </section>
     </main>
 
