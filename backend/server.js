@@ -6,9 +6,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+    res.send("Il server è vivo e risponde alla root!");
+});
+
 // CONFIGURAZIONE SUPABASE - INSERISCI I TUOI DATI QUI
-const supabaseUrl = 'https://tuo-progetto.supabase.co'; 
-const supabaseKey = 'tua-chiave-anon-public'; 
+const supabaseUrl = 'https://hqsqjwgelyoqnkrfhngi.supabase.co'; 
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhxc3Fqd2dlbHlvcW5rcmZobmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMzU5ODEsImV4cCI6MjA4ODcxMTk4MX0.uCNMY6pebBw7_IxyBmqNNJyFxsLYSgj_O0vtYQjz9z4'; 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // GET: Legge Prodotti e Crediti
