@@ -27,12 +27,12 @@ app.listen(PORT, () => {
 });
 
 
-// Endpoint DELETE: Serve per cancellare un messaggio tramite il suo indice
+// AGGIUNGI QUESTO NEL TUO server.js
 app.delete('/api/messages/:id', (req, res) => {
-    const id = parseInt(req.params.id); // Prende l'indice dall'URL
+    const id = parseInt(req.params.id); // Legge l'indice inviato dal JS
     if (id >= 0 && id < messaggi.length) {
-        const rimosso = messaggi.splice(id, 1); // Rimuove l'elemento dall'array
-        res.json({ status: "successo", rimosso: rimosso });
+        messaggi.splice(id, 1); // Rimuove il messaggio dall'array
+        res.json({ status: "successo", rimosso: id });
     } else {
         res.status(404).json({ error: "Messaggio non trovato" });
     }
