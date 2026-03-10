@@ -5,17 +5,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-let messaggi = [{ text: "Benvenuto dal backend!" }];
+let messaggi = [
+    { text: "ciao mondo" },
+    { text: "test API" }
+];
 
+// Endpoint GET: Serve per LEGGERE i dati
 app.get('/api/messages', (req, res) => {
-    res.json(messaggi);
+    res.json(messaggi); // Invia l'array in formato JSON
 });
 
+// Endpoint POST: Serve per AGGIUNGERE dati
 app.post('/api/messages', (req, res) => {
-    messaggi.push(req.body);
-    res.json({ message: "Dato ricevuto!" });
+    const nuovoMessaggio = req.body; // Legge il JSON inviato dal frontend
+    messaggi.push(nuovoMessaggio);   // Lo aggiunge alla lista
+    res.json({ status: "successo", aggiunto: nuovoMessaggio });
 });
-
 const PORT = process.env.PORT || 3000; // Prende la porta di Render o usa 3000 in locale
 app.listen(PORT, () => {
     console.log(`Server in esecuzione sulla porta ${PORT}`);
